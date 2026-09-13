@@ -53,9 +53,9 @@ dev = [
 ]
 
 [project.urls]
-Documentation = "https://github.com/ashafdsdafsdsafs/mint#readme"
-Issues = "https://github.com/ashafdsdafsdsafs/mint/issues"
-Source = "https://github.com/ashafdsdafsdsafs/mint"
+Documentation = "https://github.com/mint-icra/mint#readme"
+Issues = "https://github.com/mint-icra/mint/issues"
+Source = "https://github.com/mint-icra/mint"
 
 [tool.setuptools.packages.find]
 include = ["mint*"]

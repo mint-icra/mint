@@ -10,7 +10,7 @@
 
 <sub>论文正在双盲评审</sub>
 
-[![项目主页](https://img.shields.io/badge/Project-Anonymous_Page-2f855a)](https://ashafdsdafsdsafs.github.io/mint-page/)
+[![项目主页](https://img.shields.io/badge/Project-Anonymous_Page-2f855a)](https://mint-icra.github.io/mint-page/)
 [![评审状态](https://img.shields.io/badge/Status-Double--blind_Review-64748b)](#双盲评审版本)
 [![许可证](https://img.shields.io/badge/License-MIT-3fa03f)](LICENSE)
 
@@ -89,7 +89,7 @@ Web Viewer 是 MINT 的主要入口，可以在一个界面中选择 checkpoint�
 安装推理环境并准备兼容的 MINT checkpoint，然后启动 Viewer。评审期间，`scripts/download_assets.sh` 通过 `MINT_CHECKPOINT_URL` 接收匿名 checkpoint 地址；也可以手动放置文件。MANO 需要在[官方网站](https://mano.is.tue.mpg.de/)注册账号、接受许可证并手动下载，本项目不能代为下载或分发：
 
 ```bash
-git clone https://github.com/ashafdsdafsdsafs/mint.git
+git clone https://github.com/mint-icra/mint.git
 cd mint
 bash scripts/create_env.sh inference
 conda activate mint-inference

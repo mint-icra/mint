@@ -10,7 +10,7 @@ Anonymous Authors
 
 <sub>Paper under double-blind review</sub>
 
-[![Project Page](https://img.shields.io/badge/Project-Anonymous_Page-2f855a)](https://ashafdsdafsdsafs.github.io/mint-page/)
+[![Project Page](https://img.shields.io/badge/Project-Anonymous_Page-2f855a)](https://mint-icra.github.io/mint-page/)
 [![Review](https://img.shields.io/badge/Status-Double--blind_Review-64748b)](#anonymous-review-build)
 [![License](https://img.shields.io/badge/License-MIT-3fa03f)](LICENSE)
 
@@ -94,7 +94,7 @@ The Web Viewer is the primary MINT entry point. It lets you select a checkpoint,
 Install the inference environment and provide a compatible MINT checkpoint. During review, `scripts/download_assets.sh` accepts an anonymized checkpoint URL through `MINT_CHECKPOINT_URL`; alternatively place the file manually. The Viewer also requires the separately licensed MANO hand models. Create an account on the [official MANO website](https://mano.is.tue.mpg.de/), accept the MANO license, and download the MANO release before running the asset check below.
 
 ```bash
-git clone https://github.com/ashafdsdafsdsafs/mint.git
+git clone https://github.com/mint-icra/mint.git
 cd mint
 bash scripts/create_env.sh inference
 conda activate mint-inference
