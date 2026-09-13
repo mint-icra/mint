@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>MINT Motion Viewer</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header class="masthead reveal">
+      <a class="brand" href="/" aria-label="MINT home">
+        <span class="brand-mark">M</span>
+        <span class="brand-word">MINT</span>
+      </a>
+      <div class="masthead-center">Egocentric motion lab</div>
+      <div class="status-pill" id="server-status">
+        <span class="status-dot"></span>
+        <span>Connecting</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero reveal reveal-delay-1">
+        <p class="eyebrow">Prediction / spatial motion / hands</p>
+        <h1>See motion.<br><em>Keep data private.</em></h1>
+        <p class="hero-copy">
+          A focused prediction viewer for approved egocentric samples. No ground truth,
+          no unrestricted file browser, and no host paths in the interface.
+        </p>
+        <div class="hero-rule" aria-hidden="true"><span>01</span></div>
+      </section>
+
+      <section class="sample-section reveal reveal-delay-2" aria-labelledby="sample-heading">
+        <div class="section-heading">
+          <div>
+            <p class="kicker">Curated input</p>
+            <h2 id="sample-heading">Sample reel</h2>
+          </div>
+          <p class="sample-count" id="sample-count">0 clips</p>
+        </div>
+        <div class="sample-list" id="sample-list" role="list"></div>
+        <div class="empty-samples" id="empty-samples" hidden>
+          <span class="empty-index">00</span>
+          <div>
+            <h3>No approved clips yet</h3>
+            <p>Place reviewed videos in <code>data/samples</code>, then restart the viewer.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="workspace reveal reveal-delay-3" aria-label="Prediction workspace">
+        <article class="panel video-panel">
+          <div class="panel-head">
+            <div>
+              <p class="kicker">Selected view</p>
+              <h2 id="active-title">Choose a sample</h2>
+            </div>
+            <div class="view-switch" role="group" aria-label="Video view">
+              <button class="switch-button active" id="source-view" type="button">Source</button>
+              <button class="switch-button" id="prediction-view" type="button" disabled>Prediction</button>
+            </div>
+          </div>
+          <div class="video-stage" id="video-stage">
+            <video id="video" playsinline controls preload="metadata"></video>
+            <div class="stage-placeholder" id="stage-placeholder">
+              <span class="reticle" aria-hidden="true"></span>
+              <p>Select a reviewed clip from the reel</p>
+            </div>
+            <div class="stage-tag" id="stage-tag">SOURCE</div>
+          </div>
+          <div class="action-row">
+            <button class="run-button" id="run-button" type="button" disabled>
+              <span>Run prediction</span><span class="arrow">-&gt;</span>
+            </button>
+            <button class="cancel-button" id="cancel-button" type="button" hidden>Cancel</button>
+            <a class="artifact-link" id="download-link" href="#" hidden>Download NPZ</a>
+          </div>
+        </article>
+
+        <article class="panel trajectory-panel">
+          <div class="panel-head trajectory-head">
+            <div>
+              <p class="kicker">World space</p>
+              <h2>Predicted trajectory</h2>
+            </div>
+            <div class="legend" aria-label="Trajectory legend">
+              <span><i class="camera-color"></i>Camera</span>
+              <span><i class="left-color"></i>Left</span>
+              <span><i class="right-color"></i>Right</span>
+            </div>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="trajectory-canvas" aria-label="Interactive 3D prediction trajectory"></canvas>
+            <div class="canvas-placeholder" id="canvas-placeholder">
+              <p>Trajectory appears after inference</p>
+              <span>Drag to orbit</span>
+            </div>
+            <div class="axis-label x">X</div>
+            <div class="axis-label y">Y</div>
+            <div class="axis-label z">Z</div>
+          </div>
+          <div class="metric-strip">
+            <div><span>Frames</span><strong id="metric-frames">--</strong></div>
+            <div><span>Playback</span><strong id="metric-fps">--</strong></div>
+            <div><span>Mode</span><strong>Pred only</strong></div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <aside class="job-drawer" id="job-drawer" aria-live="polite" hidden>
+      <div class="job-copy">
+        <span class="pulse" aria-hidden="true"></span>
+        <div><strong id="job-stage">Preparing</strong><span id="job-detail">Starting a private local job</span></div>
+      </div>
+      <div class="progress-track"><span id="progress-bar"></span></div>
+      <span class="progress-value" id="progress-value">0%</span>
+    </aside>
+
+    <div class="toast" id="toast" role="alert" hidden></div>
+    <footer>
+      <span>MINT / prediction-only viewer</span>
+      <span>Local by default</span>
+    </footer>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>
+

@@ -1,0 +1,197 @@
+{
+  "codebase_version": "v3.0",
+  "robot_type": "ego_hand",
+  "total_episodes": 8,
+  "total_frames": 3600,
+  "total_tasks": 8,
+  "total_videos": 8,
+  "chunks_size": 1000,
+  "data_files_size_in_mb": 100,
+  "video_files_size_in_mb": 500,
+  "data_path": "data/chunk-{chunk_index:03d}/file-{file_index:03d}.parquet",
+  "video_path": "videos/{video_key}/chunk-{chunk_index:03d}/file-{file_index:03d}.mp4",
+  "fps": 30.0,
+  "splits": {
+    "train": "0:8"
+  },
+  "features": {
+    "index": {
+      "dtype": "int64",
+      "names": null,
+      "shape": [
+        1
+      ]
+    },
+    "frame_index": {
+      "dtype": "int64",
+      "names": null,
+      "shape": [
+        1
+      ]
+    },
+    "episode_index": {
+      "dtype": "int64",
+      "names": null,
+      "shape": [
+        1
+      ]
+    },
+    "task_index": {
+      "dtype": "int64",
+      "names": null,
+      "shape": [
+        1
+      ]
+    },
+    "main_type": {
+      "dtype": "int64",
+      "names": null,
+      "shape": [
+        1
+      ]
+    },
+    "timestamp": {
+      "dtype": "float64",
+      "names": null,
+      "shape": [
+        1
+      ]
+    },
+    "observation.state": {
+      "dtype": "float64",
+      "names": null,
+      "shape": [
+        122
+      ]
+    },
+    "state_mask": {
+      "dtype": "bool",
+      "names": [
+        "left",
+        "right"
+      ],
+      "shape": [
+        2
+      ]
+    },
+    "fov": {
+      "dtype": "float64",
+      "names": null,
+      "shape": [
+        2
+      ]
+    },
+    "intrinsics": {
+      "dtype": "float64",
+      "names": null,
+      "shape": [
+        9
+      ]
+    },
+    "extrinsics_w2c": {
+      "dtype": "float64",
+      "names": null,
+      "shape": [
+        16
+      ]
+    },
+    "observation.images.ego": {
+      "dtype": "video",
+      "names": [
+        "height",
+        "width",
+        "channel"
+      ],
+      "shape": [
+        512,
+        512,
+        3
+      ],
+      "info": {
+        "has_audio": false,
+        "video.channel": 3,
+        "video.codec": "h264",
+        "video.fps": 30.0,
+        "video.height": 512,
+        "video.is_depth_map": false,
+        "video.pix_fmt": "yuv420p",
+        "video.width": 512
+      }
+    },
+    "left_transl_world": {
+      "dtype": "float64",
+      "names": null,
+      "shape": [
+        3
+      ]
+    },
+    "left_orient_world": {
+      "dtype": "float64",
+      "names": null,
+      "shape": [
+        9
+      ]
+    },
+    "left_hand_pose": {
+      "dtype": "float64",
+      "names": null,
+      "shape": [
+        135
+      ]
+    },
+    "left_kept": {
+      "dtype": "bool",
+      "names": null,
+      "shape": [
+        1
+      ]
+    },
+    "right_transl_world": {
+      "dtype": "float64",
+      "names": null,
+      "shape": [
+        3
+      ]
+    },
+    "right_orient_world": {
+      "dtype": "float64",
+      "names": null,
+      "shape": [
+        9
+      ]
+    },
+    "right_hand_pose": {
+      "dtype": "float64",
+      "names": null,
+      "shape": [
+        135
+      ]
+    },
+    "right_kept": {
+      "dtype": "bool",
+      "names": null,
+      "shape": [
+        1
+      ]
+    }
+  },
+  "_source_dataset": "hot3d",
+  "hand_frame": "world",
+  "sample_sources": [
+    "hot3d"
+  ],
+  "sample_selection": {
+    "strategy": "sorted dataset indices with centered clips",
+    "dataset_indices": [
+      44,
+      45,
+      29,
+      14,
+      58,
+      49,
+      60,
+      83
+    ],
+    "clip_duration_seconds": 15.0
+  }
+}

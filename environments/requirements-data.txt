@@ -1,0 +1,7 @@
+joblib==1.5.3
+natsort==8.4.0
+nvidia-ml-py==13.610.43
+ray[default]==2.55.1
+timm==1.0.7
+ultralytics==8.4.23
+

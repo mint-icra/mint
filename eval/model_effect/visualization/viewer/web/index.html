@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en" class="i18n-pending">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MINT · Model Effect Console</title>
+<link rel="stylesheet" href="style.css?v=20260816-5">
+</head>
+<body>
+<div id="app">
+<div id="content">
+<header class="control-deck">
+  <div class="masthead">
+    <div class="brand-block">
+      <span class="brand-mark">WJ</span>
+      <span><b>MINT</b><small>MODEL EFFECT CONSOLE</small></span>
+    </div>
+    <label class="language-picker" data-i18n-ignore>
+      <span id="languageLabel">Language</span>
+      <select id="languageSelect" aria-labelledby="languageLabel">
+        <option value="en">English</option>
+        <option value="zh">Chinese</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="status-rail">
+    <span id="stepInfo" class="step" title="当前进行到哪一步">待操作</span>
+    <span id="progWrap" class="progwrap" title="加载进度（推理为确定进度，其余为不确定动画）" style="display:none"><span id="progBar" class="progbar"></span></span>
+    <span id="info">选择输入与参数后，点击“开始推理”运行模型。</span>
+  </div>
+
+  <div class="control-grid">
+    <section class="control-card source-card">
+      <div class="control-title"><span>01</span> 模型与样本</div>
+      <div class="field wide-field checkpoint-field"><label>Checkpoint</label>
+        <span class="brow">
+          <span class="checkpoint-path-row"><input id="ckptPath" type="text" spellcheck="false"
+              placeholder="输入 checkpoint 文件或目录路径">
+            <button id="ckptPathOpen" type="button" title="打开输入路径所在目录">打开路径</button>
+            <button id="ckptPathApply" type="button" title="选择该 checkpoint；目录内须含模型权重">选择</button></span>
+          <span id="ckptCrumb" class="crumb" title="当前浏览目录，点某层可回退"></span>
+          <span id="ckptList" class="browlist" title="可浏览任意服务器目录；点权重文件直接选择，或进入含权重的目录后选择当前目录"></span>
+        </span></div>
+      <div id="epWrap" class="field episode-field" style="display:none"><label>Episode</label>
+        <span class="episode-stepper"><button id="epPrev" title="上一个">←</button>
+          <input id="ep" type="number" min="0" value="0" step="1">
+          <button id="epNext" title="下一个">→</button></span>
+        <span id="epTotal" class="k"></span>
+        <span id="epScan" class="step" style="display:none"></span>
+        <span id="epScanProg" class="progwrap" title="枚举 episode 进度" style="display:none"><span class="progbar"></span></span></div>
+    </section>
+
+    <section class="control-card inference-card">
+      <div class="control-title"><span>02</span> 推理策略</div>
+      <div class="field"><label>叠加模式</label><select id="mode">
+        <option value="mesh">网格 Mesh</option>
+        <option value="skeleton">骨架 Skeleton</option>
+        <option value="mesh_skel">网格 + 骨架</option>
+      </select></div>
+      <div class="field"><label>相机推理</label><select id="camMode"
+        title="分窗=训练窗长；最大窗分窗=当前显卡 exact full 安全上限；流式=相机整段因果+KV cache；整段=上限内一次普通前向，超限时会先询问是否改用最大窗分窗">
+        <option value="chunked">分窗 · Chunked</option>
+        <option value="max_chunked" selected>最大窗分窗 · Max Chunked</option>
+        <option value="streaming">流式 · Streaming</option>
+        <option value="full">整段 · Full</option>
+      </select></div>
+      <div class="field stacked"><label>手部拼窗</label><span class="seg" id="handModeSeg"
+        title="切换只更新设置，不会自动推理；点击开始推理后生效">
+        <button data-hand-mode="hard">原始硬切</button><button data-hand-mode="blend">线性融合</button><button data-hand-mode="smooth" class="on" title="线性融合后，使用 ego_pipeline 数据清理链的相机系 UKF+RTS 双向平滑">融合 + UKF平滑</button>
+      </span></div>
+      <div id="ukfControls" class="ukf-controls">
+        <div class="ukf-inputs">
+          <label title="过程噪声；越大越允许快速运动，平滑越弱"><span>q</span><input id="ukfQ" type="number" min="0.1" max="2" step="0.05" value="0.7"></label>
+          <label title="观测噪声；越大越不跟随逐帧预测，平滑越强"><span>r</span><input id="ukfR" type="number" min="0.1" max="2" step="0.05" value="0.5"></label>
+          <label title="快速运动的自适应平滑；越大越抑制快速运动抖动"><span>beta</span><input id="ukfBeta" type="number" min="0" max="5" step="0.1" value="0.3"></label>
+        </div>
+        <small><b>默认：较轻平滑</b> · 建议 q 0.4–1.0、r 0.3–1.0、beta 0.2–3.0；q ↑ 更跟手，r/beta ↑ 更平滑。安全范围 q/r 0.1–2.0、beta 0–5。</small>
+      </div>
+    </section>
+
+    <section class="control-card geometry-card">
+      <div class="control-title"><span>03</span> 几何参数</div>
+      <div class="field"><label>GT 手形</label><select id="gtBetas" title="只更新设置，点击开始推理后生效">
+        <option value="per_frame">每帧</option><option value="mean">整段平均</option></select></div>
+      <div class="field"><label>预测手形</label><select id="predBetas" title="只更新设置，点击开始推理后生效">
+        <option value="per_frame">每帧</option><option value="mean">整段平均</option></select></div>
+      <div class="field"><label>预测内参</label><select id="predFov" title="只更新设置，点击开始推理后生效；2D、MuJoCo 与 Retargeting 共用">
+        <option value="per_frame">每帧</option><option value="mean">整段平均</option></select></div>
+    </section>
+  </div>
+
+  <div class="utility-rail">
+    <span class="utility-label">VIEW / TOOLS</span>
+    <span class="utility-spacer"></span>
+    <button id="loadRawBtn" class="ghost" aria-pressed="false" title="只看原始标注，不跑模型推理；再次点击返回已有 GT 对照">仅看原始 GT</button>
+    <button id="mujocoBtn" class="ghost" aria-pressed="false" title="默认关闭；点击后才按当前样本启动 MuJoCo 渲染">MuJoCo 仿真</button>
+    <button id="retargetBtn" class="ghost" aria-pressed="false" title="默认关闭；点击后才将当前 21 点驱动 Dexterous Hand 并启动渲染">Dexterous Hand Retargeting</button>
+    <span id="datasetAnalysisLauncher" class="analysis-launcher">
+      <button id="datasetAnalysisBtn" class="ghost" aria-haspopup="menu" aria-expanded="false">数据集分析 <span aria-hidden="true">▾</span></button>
+      <span id="datasetAnalysisMenu" class="analysis-launcher-menu" role="menu">
+        <button type="button" role="menuitem" data-analysis-type="video"><b>视频分析</b><small>ffprobe 媒体属性与质量</small></button>
+        <button type="button" role="menuitem" data-analysis-type="intrinsics"><b>内参分析</b><small>LeRobot episode 首帧 FOV</small></button>
+        <button type="button" role="menuitem" data-analysis-type="diversity"><b>多样性分析</b><small>场景、动作、活动范围与手监督</small></button>
+      </span>
+    </span>
+    <button id="batchBtn" class="ghost" title="递归推理指定目录的全部视频，并按镜像目录保存结果">批量推理</button>
+    <button id="benchBtn" class="ghost" title="对当前 ckpt 跑量化评测">Benchmark</button>
+    <button id="logDiffBtn" class="ghost" title="选择两个 run 和代码模块，只展示真实变更">代码对比</button>
+    <span class="utility-break" aria-hidden="true"></span>
+    <span id="inferenceActions" class="inference-actions">
+      <span class="inference-actions-label">MODEL / INFERENCE</span>
+      <button id="loadModelBtn" class="primary secondary-action" title="在每张可见 GPU 上常驻一个当前 ckpt 模型副本；须加载完成后才能推理">加载模型</button>
+      <button id="loadBtn" class="primary infer-action" title="只有点击此按钮才会运行模型；选择输入和参数不会自动推理">▶ 开始推理</button>
+      <span id="frameCapturePicker" class="frame-capture-picker">
+        <button id="frameCaptureBtn" class="frame-capture-action" type="button" aria-expanded="false"
+                aria-haspopup="menu" aria-controls="frameCaptureMenu" disabled>保存当前帧 ▾</button>
+        <span id="frameCaptureMenu" class="frame-capture-menu" role="menu" aria-label="当前帧保存来源" hidden>
+          <button type="button" role="menuitem" data-frame-capture-source="both_2d">整体 · 2D</button>
+          <button type="button" role="menuitem" data-frame-capture-source="world_motion_3d">固定世界 · 3D</button>
+          <button type="button" role="menuitem" data-frame-capture-source="current_camera_3d">当前相机 · 3D</button>
+          <button type="button" role="menuitem" data-frame-capture-source="mujoco_3d">MuJoCo · 仿真</button>
+          <button type="button" role="menuitem" data-frame-capture-source="dexterous_hand_retarget_3d">Dexterous Hand · Retargeting</button>
+        </span>
+      </span>
+      <span id="exportPicker" class="export-picker">
+        <button id="exportBtn" class="export-action" type="button" aria-expanded="false"
+                aria-haspopup="true" aria-controls="exportSourcesMenu"
+                title="默认选择四类画面；有 GT 时展开为两排八格，单格跟随原视频尺寸">导出选中 4 路</button>
+        <span id="exportSourcesMenu" class="export-sources-menu" role="group" aria-label="导出范围" hidden>
+          <span class="export-sources-title">导出范围 · 选择画面</span>
+          <label><input type="checkbox" data-export-source="both_2d" checked>原视频渲染</label>
+          <label><input type="checkbox" data-export-source="world_motion_3d" checked>固定世界 · 3D（跟随视频）</label>
+          <label><input type="checkbox" data-export-source="mujoco_3d" checked>MuJoCo · 仿真</label>
+          <label><input type="checkbox" data-export-source="dexterous_hand_retarget_3d" checked>Dexterous Hand · Retargeting</label>
+          <span class="export-sources-hint">有 GT 时两排八格：2D、3D、MuJoCo、Dexterous Hand 均为 GT/PRED</span>
+          <button id="exportSeparateBtn" type="button">下载 GT/PRED 独立视频（ZIP）</button>
+        </span>
+      </span>
+      <span id="exportProgress" class="export-progress" role="progressbar" aria-label="导出进度"
+            aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden>
+        <span class="export-progress-track"><span id="exportProgressBar"></span></span>
+        <span id="exportProgressText">0% · 等待导出</span>
+      </span>
+    </span>
+  </div>
+</header>
+<main>
+  <div id="blocks"></div>
+  <div class="metrics" id="metricsWrap"><div class="cap">逐帧 loss（与训练同公式，随当前帧联动）。权重=组权重×项权重；值/加权/占比同口径（旋转项按弧度，值列括号补度数便于观看）；加权=权重×值；占比=加权值÷加权总 loss，看谁主导。</div>
+    <div id="metrics"></div></div>
+  <div class="benchwrap analysis-wrap" id="analysisWrap" style="display:none">
+    <div class="bench-head analysis-head">
+      <span class="analysis-title"><b id="analysisTitle" class="k">视频分析</b><small id="analysisSubtitle">只读 ffprobe 媒体属性，不解码视频帧</small></span>
+      <span id="analysisCacheBadge" class="analysis-cache" hidden></span>
+      <button id="analysisClose" class="bfx" title="收起（后台分析继续）">✕</button>
+    </div>
+    <div class="analysis-form">
+      <label id="analysisPathField" class="analysis-path"><span>数据集目录</span><span class="batch-input-row"><input id="analysisInput" type="text" placeholder="服务器绝对路径"><button id="analysisBrowse" type="button">浏览选择</button><button id="analysisUseCurrent" type="button">使用当前浏览目录</button></span></label>
+      <label id="analysisWorkersField"><span id="analysisWorkersLabel">ffprobe 并发</span><input id="analysisWorkers" type="number" min="1" max="32" value="32"></label>
+      <label class="analysis-check"><input id="analysisRefresh" type="checkbox"><span>忽略缓存，重新分析</span></label>
+      <div id="analysisDiversityOptions" class="analysis-diversity-options" hidden>
+        <div class="analysis-diversity-path-head"><span><b>数据集目录（可多选）</b><small>每条路径自动识别数据集；默认已加入三套 LeRobot 数据</small></span><span class="analysis-diversity-path-actions"><button id="analysisDiversityBrowse" type="button">＋ 浏览添加</button><button id="analysisDiversityUseCurrent" type="button">＋ 添加当前浏览目录</button></span></div>
+        <div class="analysis-diversity-path-add"><input id="analysisDiversityPathInput" type="text" placeholder="输入服务器绝对路径"><button id="analysisDiversityPathAdd" type="button">添加路径</button></div>
+        <div id="analysisDiversityPathList" class="analysis-diversity-path-list"></div>
+        <div class="analysis-diversity-foot"><small>可添加单个 lerobot_v3，也可添加包含多套数据的上级目录；重复数据会自动合并。</small><label class="analysis-diversity-sample"><span>轨迹采样</span><select id="analysisSampleFiles">
+          <option value="12">快速 · 12 文件/集</option><option value="24" selected>标准 · 24 文件/集</option><option value="48">精细 · 48 文件/集</option>
+        </select></label></div>
+      </div>
+      <div id="analysisDirPicker" class="batch-dir-picker" hidden>
+        <div class="batch-dir-head"><button id="analysisDirUp" type="button">← 上一级</button><code id="analysisDirPath">/</code><button id="analysisDirChoose" type="button">✓ 选择此目录</button><button id="analysisDirClose" type="button" title="关闭目录选择器">✕</button></div>
+        <div id="analysisDirList" class="batch-dir-list"></div>
+      </div>
+    </div>
+    <div class="analysis-actions">
+      <button id="analysisRun" class="primary">▶ 开始视频分析</button>
+      <button id="analysisCancel" style="display:none">■ 取消</button>
+      <span id="analysisPhase" class="step">待分析</span>
+      <span id="analysisProg" class="progwrap" style="display:none"><span id="analysisBar" class="progbar"></span></span>
+      <span id="analysisStats" class="analysis-progress-stats"></span>
+      <span class="analysis-export" id="analysisExport" hidden>
+        <a data-analysis-export="json">JSON</a><a data-analysis-export="csv">CSV</a><a data-analysis-export="txt">摘要 TXT</a>
+      </span>
+    </div>
+    <div id="analysisCurrent" class="analysis-current"></div>
+    <div id="analysisResults" hidden>
+      <div id="analysisVideoResults" class="analysis-video-results">
+        <div id="analysisKpis" class="analysis-kpis"></div>
+        <div class="analysis-section-head"><span><b>构成概览</b><small>柱长表示该分组的视频数量占比</small></span></div>
+        <div id="analysisCharts" class="analysis-charts"></div>
+        <div class="analysis-detail-grid">
+          <section><div class="analysis-section-head"><span><b>来源目录</b><small>按一级子目录汇总文件、时长与容量</small></span></div><div id="analysisFolders" class="analysis-rank-list"></div></section>
+          <section><div class="analysis-section-head"><span><b>质量诊断</b><small>规则诊断用于定位值得复查的样本</small></span></div><div id="analysisQuality" class="analysis-quality"></div></section>
+        </div>
+        <div class="analysis-section-head analysis-table-head"><span><b>逐视频明细</b><small id="analysisTableCount"></small></span><span class="analysis-table-note">点击表头排序 · 服务端分页</span></div>
+        <div class="analysis-filters">
+          <input id="analysisSearch" type="search" placeholder="搜索路径 / 编码 / 分辨率">
+          <select id="analysisAnomaly"><option value="">全部质量状态</option><option value="any">存在诊断项</option><option value="clean">无诊断项</option><option value="failed">解析失败</option></select>
+          <select id="analysisCodec"><option value="">全部编码</option></select>
+          <select id="analysisResolution"><option value="">全部分辨率</option></select>
+          <select id="analysisOrientation"><option value="">全部方向</option></select>
+          <select id="analysisPageSize"><option value="50">50 条/页</option><option value="100" selected>100 条/页</option><option value="200">200 条/页</option><option value="500">500 条/页</option></select>
+        </div>
+        <div class="analysis-table-wrap"><table class="analysis-table"><thead><tr>
+          <th data-analysis-sort="relative_path">视频路径</th><th data-analysis-sort="duration_sec">时长</th><th data-analysis-sort="fps">FPS</th>
+          <th data-analysis-sort="frame_count">帧数</th><th data-analysis-sort="resolution">分辨率</th><th data-analysis-sort="codec">编码</th>
+          <th data-analysis-sort="bitrate_bps">码率</th><th data-analysis-sort="size_bytes">容量</th><th>音频</th><th>质量诊断</th>
+        </tr></thead><tbody id="analysisTableBody"></tbody></table></div>
+        <div class="analysis-pager"><button id="analysisPrev">← 上一页</button><span id="analysisPage"></span><button id="analysisNext">下一页 →</button></div>
+      </div>
+      <div id="analysisIntrinsicResults" class="analysis-intrinsic-results" hidden>
+        <div class="analysis-section-head analysis-intrinsic-head"><span><b>相机内参分布</b><small>每个 episode 仅采样首帧 FOV，并结合视频分辨率反解焦距</small></span></div>
+        <div id="analysisIntrinsics" class="analysis-intrinsics"></div>
+      </div>
+      <div id="analysisDiversityResults" class="analysis-diversity-results" hidden>
+        <div id="analysisDiversity" class="analysis-diversity"></div>
+      </div>
+    </div>
+  </div>
+  <div class="benchwrap batchwrap" id="batchWrap" style="display:none">
+    <div class="bench-head batch-head">
+      <b class="k">批量视频推理</b>
+      <span class="sub">多 GPU 推理与多视频渲染流水并发，不再逐个视频等待 MP4</span>
+      <span id="batchDevices" class="batch-devices"></span>
+      <button id="batchClose" class="bfx" title="收起（后台任务继续）">✕</button>
+    </div>
+    <div class="batch-form">
+      <label class="batch-model-run"><span>批量模型 Run</span><select id="batchModelRun" title="为本次批量任务单独选择训练 Run；启动后自动切换并加载"><option value="">加载中…</option></select></label>
+      <label><span>Checkpoint Step</span><select id="batchModelStep" title="本次批量任务实际使用的 checkpoint"><option value="">请先选择 Run</option></select></label>
+      <label class="batch-path"><span>输入目录</span><span class="batch-input-row"><input id="batchInput" type="text" placeholder="服务器绝对路径"><button id="batchBrowseInput" type="button">浏览选择</button><button id="batchUseCurrent" type="button">使用当前浏览目录</button></span></label>
+      <div id="batchDirPicker" class="batch-dir-picker" hidden>
+        <div class="batch-dir-head"><button id="batchDirUp" type="button">← 上一级</button><code id="batchDirPath">/</code><button id="batchDirChoose" type="button">✓ 选择此目录</button><button id="batchDirClose" type="button" title="关闭目录选择器">✕</button></div>
+        <div id="batchDirList" class="batch-dir-list"></div>
+      </div>
+      <label class="batch-path"><span>输出根目录</span><input id="batchOutput" type="text" placeholder="服务器绝对路径；按输入相对层级镜像保存"></label>
+      <label><span>文件名模板</span><input id="batchName" type="text" value="{stem}_pred" title="支持 {stem} {name} {ext} {parent} {index}，例如 {index:04d}_{stem}"></label>
+      <label><span>渲染模式</span><select id="batchMode"><option value="mesh">网格 Mesh</option><option value="skeleton">骨架 Skeleton</option><option value="mesh_skel" selected>网格 + 骨架</option></select></label>
+      <label><span>相机推理</span><select id="batchCam" title="Full 超过安全上限会失败；批量长视频请选择最大窗分窗"><option value="chunked">分窗 · Chunked</option><option value="max_chunked" selected>最大窗分窗 · Max Chunked</option><option value="streaming">流式 · Streaming</option><option value="full">整段 · Full</option></select></label>
+      <label><span>手部拼窗 / 后处理</span><select id="batchHand"><option value="hard">原始硬切</option><option value="blend">线性融合</option><option value="smooth" selected>融合 + UKF平滑</option></select></label>
+      <label><span>预测手形</span><select id="batchBetas"><option value="per_frame">每帧</option><option value="mean">整段平均</option></select></label>
+      <label><span>预测内参</span><select id="batchFov"><option value="per_frame">每帧</option><option value="mean">整段平均</option></select></label>
+      <label class="batch-check"><input id="batchOverwrite" type="checkbox"><span>覆盖已有 MP4 / NPZ</span></label>
+    </div>
+    <div class="batch-actions">
+      <button id="batchRun" class="primary">▶ 开始批量推理</button>
+      <button id="batchCancel" style="display:none">■ 取消</button>
+      <span id="batchPhase" class="step">待运行</span>
+      <span id="batchProg" class="progwrap" style="display:none"><span id="batchBar" class="progbar"></span></span>
+      <span id="batchStats" class="batch-stats"></span>
+    </div>
+    <div id="batchCurrent" class="batch-current"></div>
+    <div id="batchResult" class="batch-result"></div>
+    <details class="benchlog-wrap"><summary>任务日志</summary><pre class="benchlog" id="batchLog"></pre></details>
+  </div>
+  <div class="benchwrap" id="benchWrap" style="display:none">
+    <div class="bench-head">
+      <b class="k">Benchmark 测评</b>
+      <span class="sub">添加多个模型，以相同功能、数据和序列范围依次测评并横向对比</span>
+      <div class="bf-model-picker">
+        <div class="bf-model-picker-row bf-model-current-row">
+          <label>Run <select id="bfModelRun"><option value="">加载中…</option></select></label>
+          <label>Step <select id="bfModelStep"><option value="">请先选择 Run</option></select></label>
+          <button id="bfModelAdd" type="button">＋ 加入待测模型</button>
+        </div>
+        <div class="bf-model-picker-row bf-model-history-row">
+          <label class="bf-history-tier">历史份量
+            <select id="bfHistoryTier" title="先按测评数据份量筛选历史记录">
+              <option value="quarter">25%</option>
+              <option value="half" selected>50%</option>
+              <option value="full">100%</option>
+              <option value="all">全部</option>
+            </select>
+          </label>
+          <label class="bf-history-picker">历史测评（自动扫描 logs） <select id="bfModelHistory" title="自动扫描默认 Benchmark 保存目录"><option value="">扫描中…</option></select></label>
+          <button id="bfHistoryAdd" type="button">＋ 加入历史对比</button>
+        </div>
+      </div>
+      <div id="bfModelList" class="bf-model-list"></div>
+      <section class="bf-executor">
+        <div class="bf-executor-head">
+          <span><b>运行位置</b><small>本地 GPU 或 Aliyun PAI-DLC 多节点分布式测评</small></span>
+          <div class="bf-backend-switch" role="tablist" aria-label="Benchmark 运行位置">
+            <button type="button" data-bench-backend="local" class="on" role="tab">本地显卡</button>
+            <button type="button" data-bench-backend="aliyun" role="tab">Aliyun 远程</button>
+          </div>
+          <span id="bfRemoteJob" class="bf-remote-job"></span>
+        </div>
+        <div id="bfLocalExecutor" class="bf-local-executor">
+          <span id="bfGpus" class="bf-gpus" title="勾选参与并行评测的显卡（多卡=按序列分片并行，各卡各加载一份模型）"></span>
+        </div>
+        <div id="bfAliyunExecutor" class="bf-aliyun-executor" hidden>
+          <div class="bf-aliyun-primary">
+            <label><span>节点数</span><input id="bfAliNodes" type="number" min="1" max="128" step="1" value="2"><small>可按任务规模修改</small></label>
+            <span class="bf-resource-times">×</span>
+            <label><span>每节点 GPU</span><input id="bfAliGpus" type="number" min="1" max="8" step="1" value="8"><small>默认用满 8 卡</small></label>
+            <span class="bf-resource-equals">=</span>
+            <output id="bfAliWorld"><b>16</b><small>全局 shards</small></output>
+          </div>
+          <details class="bf-aliyun-advanced">
+            <summary>Aliyun 提交配置 <small>已填默认值，均可修改</small></summary>
+            <div class="bf-aliyun-fields">
+              <label><span>Region</span><input id="bfAliRegion" value="cn-hangzhou"></label>
+              <label><span>Workspace ID</span><input id="bfAliWorkspace" value="REPLACE_ME"></label>
+              <label><span>Resource ID</span><input id="bfAliResource" value="REPLACE_ME"></label>
+              <label class="wide"><span>Image</span><input id="bfAliImage" value="registry.example.com/project/benchmark:latest"></label>
+              <label class="wide"><span>CPFS URI</span><input id="bfAliCpfs" value="bmcpfs://REPLACE_ME/"></label>
+              <label class="wide"><span>Repo Dir</span><input id="bfAliRepo" value="/workspace/mint"></label>
+              <label><span>Worker CPU</span><input id="bfAliCpu" type="number" min="1" value="32"></label>
+              <label><span>Worker Memory</span><input id="bfAliMemory" value="128Gi"></label>
+              <label><span>Shared Memory</span><input id="bfAliSharedMemory" value="64Gi"></label>
+              <label><span>Conda Env</span><input id="bfAliConda" value="mint"></label>
+              <label class="wide"><span>Job Name</span><input id="bfAliJobName" value="mint_benchmark"></label>
+            </div>
+          </details>
+        </div>
+      </section>
+      <section id="bfSampling" class="bf-sampling" hidden>
+        <div id="bfSotaSampling" class="bf-sota-sampling" hidden>
+          <span class="bf-sampling-label">联合 SOTA 测评份量</span>
+          <div class="bf-sampling-presets" role="radiogroup" aria-label="联合 SOTA 测评份量">
+            <button type="button" data-bench-sample="minimum">最小份量</button>
+            <button type="button" data-bench-sample="quarter">25%</button>
+            <button type="button" data-bench-sample="half" class="on">50%</button>
+            <button type="button" data-bench-sample="full">100%</button>
+          </div>
+          <span id="bfSamplingSummary" class="bf-sampling-summary"></span>
+        </div>
+        <div id="bfSingleSampling" class="bf-single-sampling" hidden>
+          <span id="bfSingleDatasetLabel" class="bf-sampling-label">单数据集范围</span>
+          <label class="bf-range">序列范围
+            <input id="bfSeqStart" type="number" min="0" value="0" title="起始序号（包含）">
+            <span>–</span>
+            <input id="bfSeqEnd" type="number" min="1" placeholder="全部" title="结束序号（不包含）；例如 20–53 表示索引 20 到 52">
+            <span class="mut">[start, end)</span>
+          </label>
+          <label>max-frames <input id="bfFrames" type="number" min="1" placeholder="全部" title="每序列最多帧数，空=全部"></label>
+        </div>
+      </section>
+      <label class="bf-cache-option" title="严格匹配模型权重、配置、协议、数据集、抽样档位和序列范围后，直接读取 output/eval/benchmark 中的成功结果">
+        <input id="bfReuseCache" type="checkbox" checked>复用已成功结果
+      </label>
+      <label class="bf-cache-option bf-ukf-option" title="原始模型全部完成后，按本次有效质量指标的平均归一化损失选择最佳模型，再以线性融合 + UKF + RTS 独立复测同一协议">
+        <input id="bfAutoUkf" type="checkbox" checked>自动优选最佳模型并追加 UKF 融合测评
+      </label>
+      <span id="bfCount" class="bfcount"></span>
+      <button id="bfRun" class="primary">▶ 运行测评</button>
+      <button id="bfCancel" style="display:none">■ 取消</button>
+      <span id="bfPhase" class="step"></span>
+      <span id="bfProg" class="progwrap" style="display:none"><span id="bfBar" class="progbar"></span></span>
+      <button id="bfClose" class="bfx" title="收起（后台评测继续）">✕</button>
+    </div>
+    <section id="bfProgressCard" class="bf-run-progress" aria-live="polite" hidden>
+      <header>
+        <span><b>本次测评总进度</b><span id="bfProgressStatus">等待启动</span></span>
+        <strong id="bfProgressPercent">0%</strong>
+      </header>
+      <div class="bf-run-progress-track" role="progressbar" aria-label="Benchmark 总进度"
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <span id="bfProgressBar"></span>
+      </div>
+      <div class="bf-run-progress-stats">
+        <span><em>完成</em><b id="bfProgressDone">0 / —</b></span>
+        <span><em>当前已用</em><b id="bfProgressElapsed">—</b></span>
+        <span><em>预计总时长</em><b id="bfProgressTotalTime">—</b></span>
+        <span><em>预计还需</em><b id="bfProgressRemaining">—</b></span>
+      </div>
+      <p id="bfProgressNote">启动后先枚举评测单元，获得首批完成速度后开始估算时间。</p>
+    </section>
+    <section class="bf-suite-panel">
+      <div class="bf-suite-head">
+        <b>对比协议</b>
+        <div id="bfSuiteSwitch" class="bf-suite-switch" role="tablist" aria-label="Benchmark 对比协议">
+          <button type="button" data-bench-suite="sota" role="tab">联合 SOTA</button>
+          <button type="button" data-bench-suite="camera" role="tab">相机轨迹对比</button>
+          <button type="button" data-bench-suite="hot3d_camera" role="tab">HOT3D 相机表</button>
+          <button type="button" data-bench-suite="arctic_camera" role="tab">ARCTIC 相机表</button>
+          <button type="button" data-bench-suite="vidihand" role="tab">ViDiHand 对比</button>
+          <button type="button" data-bench-suite="custom" role="tab">全部评测</button>
+        </div>
+      </div>
+      <div id="bfMetricPicker" class="bf-metric-picker"></div>
+    </section>
+    <section id="bfTableExport" class="bf-table-export" aria-labelledby="bfTableExportTitle">
+      <header>
+        <span><b id="bfTableExportTitle">导出四张结果表 · JPG</b><small>多选表格后可分别保存，或汇总为一张长图；导出包含固定行及已有的本次模型结果。</small></span>
+        <output id="bfTableExportCount">已选择 4 / 4</output>
+      </header>
+      <div class="bf-table-export-options" role="group" aria-label="选择要导出的 Benchmark 表格">
+        <label><input type="checkbox" data-bench-table-export="hot3d-camera" checked><span>HOT3D 相机表</span></label>
+        <label><input type="checkbox" data-bench-table-export="arctic-camera" checked><span>ARCTIC 相机表</span></label>
+        <label><input type="checkbox" data-bench-table-export="vidihand-arctic" checked><span>ViDiHand · ARCTIC</span></label>
+        <label><input type="checkbox" data-bench-table-export="vidihand-hot3d" checked><span>ViDiHand · HOT3D</span></label>
+      </div>
+      <div class="bf-table-export-actions">
+        <button type="button" data-bench-table-select="all">全选表格</button>
+        <button type="button" data-bench-table-select="none">清空选择</button>
+        <span></span>
+        <button id="bfTableExportSeparate" class="secondary" type="button">分别导出 JPG</button>
+        <button id="bfTableExportCombined" class="primary" type="button">汇总导出 JPG</button>
+      </div>
+      <p id="bfTableExportStatus" aria-live="polite">就绪 · 图片按完整指标列导出</p>
+    </section>
+    <div class="bench-grid" id="bfGrid"></div>
+    <section id="bfWorkSummary" class="bf-work-summary" aria-live="polite"></section>
+    <section class="bf-reference" id="bfReferenceTables"></section>
+    <div class="bench-steps" id="bfSteps"></div>
+    <div class="benchtable" id="bfTable"></div>
+    <section class="bf-live bf-sota-live" id="bfSotaLiveWrap">
+      <div class="bf-live-title"><b>公开 SOTA + 本次模型 · 实时</b><span id="bfSotaLiveHint">M1、M2… 分行显示，等待评测结果</span></div>
+      <div id="bfSotaLive"></div>
+    </section>
+    <section class="bf-live" id="bfLiveWrap">
+      <div class="bf-live-title"><b>本次模型横向对比 · 实时</b><span id="bfLiveHint">每个模型完成后加入横向指标表</span></div>
+      <div class="benchtable" id="bfLive"></div>
+    </section>
+    <details class="benchlog-wrap"><summary>运行日志</summary><pre class="benchlog" id="bfLog"></pre></details>
+  </div>
+  <div class="benchwrap" id="ldWrap" style="display:none">
+    <div class="bench-head">
+      <b class="k">📋 配置 / 代码变更</b>
+      <span class="sub">只展示改变的配置，并可把代码 diff 限制到指定模块</span>
+      <label>Run A <select id="ldA" title="基准 run（相对 model_train）"></select></label>
+      <label>Run B <select id="ldB" title="对比 run（相对 model_train）"></select></label>
+      <label>代码模块 <select id="ldScope" title="只比较训练快照中选定的顶层代码模块"><option value="">全部代码</option></select></label>
+      <button id="ldRun" class="primary">▶ 对比</button>
+      <span id="ldPhase" class="step"></span>
+      <span id="ldProg" class="progwrap" style="display:none"><span id="ldBar" class="progbar"></span></span>
+      <button id="ldClose" class="bfx" title="收起（后台对比继续）">✕</button>
+    </div>
+    <div class="benchtable" id="ldTable"></div>
+  </div>
+</main>
+</div>
+<aside id="sidebar">
+  <div class="aside-head"><span class="aside-kicker">WORKSPACE</span><b>浏览与编排</b></div>
+  <label>栏目顺序</label>
+  <div class="side-hint">拖动 ☰ 调整顺序；点 👁 隐藏/显示对应模块（视频 / 固定世界 / 当前相机 / MuJoCo / Dexterous Hand Retargeting / 数值 / loss / 工具面板）。仿真、retargeting 与工具面板默认关闭；MuJoCo / Dexterous Hand 仅在手动开启后开始渲染</div>
+  <ul id="orderBar"></ul>
+  <label>输入目录</label>
+  <div class="side-hint">默认起点 output/…/lerobot；可沿面包屑上溯。到 lerobot 目录后选择 Episode；普通目录点击视频只会选中，不会自动推理。</div>
+  <span class="brow" id="inBrow"><span id="inNav"><span id="inCrumb" class="crumb" title="已选路径,点某层可回退"></span><button id="inUp" title="返回上一级目录" hidden>⬆ 上一级</button></span>
+    <span id="inList" class="browlist" title="点目录进入 / 点视频文件选中输入（不会自动推理）"></span></span>
+</aside>
+</div>
+<script src="i18n.js?v=20260816-3"></script>
+<script src="camera_baselines.js?v=20260814-1"></script>
+<script src="benchmark_suites.js?v=20260906-coverage"></script>
+<script src="app.js?v=20260816-8"></script>
+</body>
+</html>

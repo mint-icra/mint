@@ -1,0 +1,14 @@
+aliyun:
+  region: cn-hangzhou
+  workspace_id: "REPLACE_ME"
+  resource_id: "REPLACE_ME"
+  image: "registry.example.com/project/benchmark:latest"
+  cpfs_uri: "bmcpfs://REPLACE_ME/"
+  repo_dir: "/workspace/mint"
+  nnodes: 2
+  gpus_per_node: 8
+  worker_cpu: 32
+  worker_memory: 128Gi
+  worker_shared_memory: 64Gi
+  conda_env: mint
+  job_name: mint_benchmark

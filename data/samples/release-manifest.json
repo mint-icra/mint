@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "sample": "lerobot_v3",
+  "format": "LeRobot v3",
+  "sources": ["hot3d"],
+  "episodes": 8,
+  "frames": 3600,
+  "fps": 30.0,
+  "width": 512,
+  "height": 512,
+  "privacy_masks": 0,
+  "post_transform_reviewed": false,
+  "details": "lerobot_v3/sample_manifest.json"
+}

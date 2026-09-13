@@ -1,0 +1,18 @@
+samples: data/samples
+artifacts: artifacts/viewer
+model:
+  config: configs/training/mint_step2.yaml
+  checkpoint: checkpoints/model.safetensors
+  devices: auto
+inference:
+  max_frames: 160
+  target_fps: 15.0
+  camera_mode: chunked
+  hand_mode: smooth
+  compile_mode: auto
+  fp8_mode: auto
+  warmup_passes: 2
+  window_batch_size: null
+viewer:
+  host: 127.0.0.1
+  port: 7860
