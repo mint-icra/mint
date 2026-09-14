@@ -1,7 +1,7 @@
 <div align="center">
 
-<p>We hope MINT can empower everyone to produce egocentric data,<br>
-scale its production and validation.</p>
+<h2><strong>We hope MINT can empower everyone to produce egocentric data,<br>
+scale its production and validation.</strong></h2>
 
 <!-- Anonymous review build: identity-bearing release links and media are omitted. -->
 
