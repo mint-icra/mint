@@ -1,5 +1,8 @@
 <div align="center">
 
+<p>We hope MINT can empower everyone to produce egocentric data,<br>
+scale its production and validation.</p>
+
 <!-- Anonymous review build: identity-bearing release links and media are omitted. -->
 
 <img src="docs/asset/scale.webp" width="100%" alt="108 MINT renders playing at once, one tile per clip">
