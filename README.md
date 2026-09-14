@@ -12,6 +12,8 @@ Anonymous Authors
 
 [![Project Page](https://img.shields.io/badge/Project-Anonymous_Page-2f855a)](https://mint-icra.github.io/mint-page/)
 [![Review](https://img.shields.io/badge/Status-Double--blind_Review-64748b)](#anonymous-review-build)
+[![Model](https://img.shields.io/badge/%F0%9F%A4%97-Model-ffbe00)](https://huggingface.co/mint-icra/mint)
+[![Dataset](https://img.shields.io/badge/%F0%9F%A4%97-Dataset-ffbe00)](https://huggingface.co/datasets/mint-icra/mint_ego_datasets)
 [![License](https://img.shields.io/badge/License-MIT-3fa03f)](LICENSE)
 
 [中文说明](README_ZH.md)
@@ -39,7 +41,7 @@ Egocentric motion reconstruction estimates how a camera moves and how both hands
 
 - **Unified camera and hand modeling.** A shared spatiotemporal representation feeds four prediction heads: camera extrinsics, field of view, camera-frame MANO, and per-frame hand presence. Explicit rigid composition produces world-space hand motion without depth maps or point clouds at inference.
 - **Structured pipeline amortization.** EgoPipeline generates structured camera and hand supervision offline. MINT learns from these labels, reducing the need to deploy multiple independent models when processing new videos.
-- **Research code and reproducibility resources.** This review build provides training and inference code, a small reviewed sample, benchmark tooling, and reference code for EgoPipeline orchestration, cleaning, and export. Identity-bearing checkpoint and dataset endpoints will be restored after review. Source videos and separately licensed assets must be obtained under their own access terms.
+- **Research code and reproducibility resources.** This review build provides training and inference code, a small reviewed sample, benchmark tooling, and reference code for EgoPipeline orchestration, cleaning, and export. The [checkpoint](https://huggingface.co/mint-icra/mint) and the [structured supervision dataset](https://huggingface.co/datasets/mint-icra/mint_ego_datasets) are published under anonymous accounts for review. Source videos and separately licensed assets must be obtained under their own access terms.
 
 <img src="docs/asset/pipeline_vs_mint.webp" width="100%" alt="Same frames through the conventional ego pipeline and through MINT: the pipeline places both hands away from the real hands, MINT keeps them on the hands">
 
@@ -115,7 +117,7 @@ Place the models and assets used by Quick Start at the paths below. MANO must be
 
 | Model or asset | Download source | Path in this repository | Notes |
 | --- | --- | --- | --- |
-| MINT checkpoint | Anonymous reviewer artifact, `MINT_CHECKPOINT_URL`, or a manually supplied compatible file | `checkpoints/model.safetensors` | Public identity-bearing endpoints are intentionally omitted during review. |
+| MINT checkpoint | [Anonymous model repository](https://huggingface.co/mint-icra/mint), `MINT_CHECKPOINT_URL`, or a manually supplied compatible file | `checkpoints/model.safetensors` | Hosted under an anonymous account for review. |
 | MANO left- and right-hand models | [MANO website](https://mano.is.tue.mpg.de/) | `assets/mano/mano_right/MANO_RIGHT.pkl`<br>`assets/mano/mano_left/MANO_LEFT.pkl` | Registration and acceptance of the MANO License are required. |
 | LingBot-Map pretrained backbone | [LingBot-Map](https://github.com/robbyant/lingbot-map) | `assets/models/lingbot-map.pt` | Optional; download only when required by the selected configuration. |
 | Optional dexterous-hand retargeting assets | Withheld during double-blind review | `eval/simulate/dexterous-hand-retargeting/` | The rest of the Viewer works without this optional panel. |
@@ -402,7 +404,7 @@ Set the Stage 2 `data.root` to your prepared camera-trajectory LeRobot dataset; 
 
 ## 🗂️ Public Ego pretraining data
 
-The non-video portions of the `ego4d`, `egodex`, and `epickitchen` data processed by this repository's Ego data-production pipeline will be released after review. The schema, loader, preparation code, and a reviewed sample are included here without linking identity-bearing distribution accounts.
+The non-video portions of the `ego4d`, `egodex`, and `epickitchen` data processed by this repository's Ego data-production pipeline are available from the [anonymous dataset repository](https://huggingface.co/datasets/mint-icra/mint_ego_datasets). The schema, loader, preparation code, and a reviewed sample are included here.
 
 | | |
 | --- | --- |

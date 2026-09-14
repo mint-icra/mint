@@ -12,6 +12,8 @@
 
 [![项目主页](https://img.shields.io/badge/Project-Anonymous_Page-2f855a)](https://mint-icra.github.io/mint-page/)
 [![评审状态](https://img.shields.io/badge/Status-Double--blind_Review-64748b)](#双盲评审版本)
+[![模型](https://img.shields.io/badge/%F0%9F%A4%97-Model-ffbe00)](https://huggingface.co/mint-icra/mint)
+[![数据集](https://img.shields.io/badge/%F0%9F%A4%97-Dataset-ffbe00)](https://huggingface.co/datasets/mint-icra/mint_ego_datasets)
 [![许可证](https://img.shields.io/badge/License-MIT-3fa03f)](LICENSE)
 
 [English](README.md)
@@ -34,7 +36,7 @@
 
 - **统一建模相机与双手。** 共享的时空表征驱动四个预测头，分别估计相机外参、视场角、相机坐标系 MANO 参数与逐帧手部存在性，再通过显式刚体变换得到世界坐标系手部运动。推理时无需生成深度图或点云。
 - **结构化管线摊销（structured pipeline amortization）。** EgoPipeline 在线下生成结构化的相机与手部监督，MINT 学习这些标签，从而减少处理新视频时对多个独立模型的部署依赖。
-- **研究代码与复现资源。** 评审版本提供训练与推理代码、经过审核的小样本、benchmark 工具，以及 EgoPipeline 调度、清理与导出的参考源码。会暴露身份的 checkpoint 和数据集发布地址将在评审后恢复。原始视频和需单独授权的资产仍须按各自的访问与许可条款获取。
+- **研究代码与复现资源。** 评审版本提供训练与推理代码、经过审核的小样本、benchmark 工具，以及 EgoPipeline 调度、清理与导出的参考源码。[checkpoint](https://huggingface.co/mint-icra/mint) 与[结构化监督数据集](https://huggingface.co/datasets/mint-icra/mint_ego_datasets)已在匿名账号下发布，供评审使用。原始视频和需单独授权的资产仍须按各自的访问与许可条款获取。
 
 <img src="docs/asset/pipeline_vs_mint.webp" width="100%" alt="同一批帧分别经过传统 ego 管线和 MINT：管线把两只手都放错了位置，MINT 保持贴合">
 
@@ -110,7 +112,7 @@ Quick Start 使用的模型与资产请按下表放置。MANO 需由使用者从
 
 | 模型或资产 | 下载来源 | 仓库内放置路径 | 说明 |
 | --- | --- | --- | --- |
-| MINT checkpoint | 匿名评审附件、`MINT_CHECKPOINT_URL` 或手动提供的兼容文件 | `checkpoints/model.safetensors` | 评审期间有意省略会暴露身份的公开地址。 |
+| MINT checkpoint | [匿名模型仓库](https://huggingface.co/mint-icra/mint)、`MINT_CHECKPOINT_URL` 或手动提供的兼容文件 | `checkpoints/model.safetensors` | 评审期间托管在匿名账号下。 |
 | MANO 左右手模型 | [MANO 官网](https://mano.is.tue.mpg.de/) | `assets/mano/mano_right/MANO_RIGHT.pkl`<br>`assets/mano/mano_left/MANO_LEFT.pkl` | 需要注册并接受 MANO License。 |
 | LingBot-Map 预训练骨干 | [LingBot-Map](https://github.com/robbyant/lingbot-map) | `assets/models/lingbot-map.pt` | 可选资产，仅在对应配置需要时下载。 |
 | 可选灵巧手重定向资产 | 双盲评审期间不提供 | `eval/simulate/dexterous-hand-retargeting/` | 不影响 Viewer 的其他功能。 |
